@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Distill</title>
+<style>
+  :root {
+    --bg: #f6f5f2;
+    --panel: #ffffff;
+    --border: #ddd8ce;
+    --text: #1e1c19;
+    --text2: #6b6459;
+    --accent: #3a6fb0;
+    --accent-ink: #ffffff;
+    --good: #2f8a5b;
+    --warn: #b5482c;
+    --warn-bg: #fbe9e4;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16181a;
+      --panel: #1e2124;
+      --border: #35393e;
+      --text: #ece9e6;
+      --text2: #9a978f;
+      --accent: #6ea4e0;
+      --accent-ink: #0e1b28;
+      --good: #6fbf8f;
+      --warn: #ff8f6f;
+      --warn-bg: #3a2420;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: var(--sans); line-height: 1.5;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 24px 16px 80px; }
+  header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 4px; }
+  h1 { font-size: 22px; margin: 0; }
+  .tagline { color: var(--text2); font-size: 14px; margin: 0 0 20px; }
+  button {
+    font: inherit; cursor: pointer; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--panel); color: var(--text); padding: 8px 14px;
+  }
+  button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+  button.primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.ghost { background: transparent; }
+  button:not(.primary):hover { background: var(--bg); }
+  textarea, input[type=text], input[type=password], select {
+    font: inherit; width: 100%; padding: 10px; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--panel); color: var(--text);
+    resize: vertical;
+  }
+  label.field-label { display: block; font-size: 13px; color: var(--text2); margin: 0 0 6px; }
+  section.card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px; margin-bottom: 16px;
+  }
+  section.card > h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text2); margin: 0 0 14px; }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .small { font-size: 13px; color: var(--text2); }
+  details.about summary { cursor: pointer; font-size: 13px; color: var(--text2); }
+  details.about { margin: 20px 0; }
+  details.about p { font-size: 13px; color: var(--text2); }
+  .output-block {
+    border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 6px;
+    background: var(--bg); white-space: pre-wrap; font-family: var(--sans);
+  }
+  .changed-block {
+    border: 1px dashed var(--warn); background: var(--warn-bg); color: var(--warn);
+    border-radius: 8px; padding: 10px 12px; margin-top: 10px; font-size: 14px;
+  }
+  .error-block {
+    border: 1px solid var(--warn); background: var(--warn-bg); color: var(--warn);
+    border-radius: 8px; padding: 10px 12px; margin-top: 10px; font-size: 14px;
+  }
+  .token-stat {
+    display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+    font-family: var(--mono); font-size: 14px; margin-top: 12px;
+  }
+  .token-stat .num { font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .token-stat .arrow { color: var(--text2); }
+  .token-stat .pct { color: var(--good); font-weight: 600; }
+  .token-stat .pct.up { color: var(--warn); }
+  .overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: none;
+    align-items: center; justify-content: center; z-index: 999; padding: 16px;
+  }
+  .overlay .box { background: var(--panel); border-radius: 12px; padding: 20px; max-width: 420px; width: 100%; }
+  .overlay .box h3 { margin-top: 0; color: var(--warn); }
+  .checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+  .checkbox-row input { width: auto; }
+  .hint { font-size: 12px; color: var(--text2); margin-top: 4px; }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Distill</h1>
+    <button id="settings-toggle" class="ghost">settings</button>
+  </header>
+  <p class="tagline">Rework what you're about to send an LLM into something denser and structurally clearer — same meaning, fewer tokens, easier to parse correctly.</p>
+
+  <section class="card" id="settings-panel" style="display:none;">
+    <h2>Settings — your API key</h2>
+    <label class="field-label" for="api-key">Anthropic API key (stored only in this browser, on this device)</label>
+    <div class="row">
+      <input type="password" id="api-key" placeholder="sk-ant-…" style="flex:1;" />
+      <button id="toggle-key-visibility" class="ghost">show</button>
+    </div>
+    <p class="hint">Distill calls the Claude API directly from your browser with this key. Nothing is sent to any server run by Distill — there isn't one. You pay Anthropic directly for what you use; a single pass typically costs a small fraction of a cent to a few cents depending on the model below. Counting tokens (the before/after numbers) uses a separate, lightweight endpoint that doesn't generate any text.</p>
+    <label class="field-label" style="margin-top:14px;">Model</label>
+    <select id="model-select">
+      <option value="claude-sonnet-5">Sonnet 5 — balanced (default)</option>
+      <option value="claude-haiku-4-5-20251001">Haiku 4.5 — cheapest, less nuance</option>
+      <option value="claude-opus-5">Opus 5 — most nuanced, priciest</option>
+    </select>
+    <p class="hint">Token counts are model-specific — switching models may change the before/after numbers even for the same text.</p>
+    <div class="row" style="margin-top:14px;">
+      <button id="save-settings" class="primary">save</button>
+      <span id="settings-saved-hint" class="small" style="display:none;">saved</span>
+    </div>
+    <div class="row" style="margin-top:14px; padding-top:14px; border-top:1px solid var(--border);">
+      <span class="small">Your API key is the only thing stored — nothing else persists.</span>
+      <button id="clear-data-btn" class="ghost" style="color:var(--warn); border-color:var(--warn);">clear it</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Distill a message</h2>
+    <label class="field-label" for="input-text">What you're about to send</label>
+    <textarea id="input-text" rows="7" placeholder="Paste the message, prompt, or document you're about to send to an LLM…"></textarea>
+
+    <div class="row" style="margin-top:10px;">
+      <button id="distill-btn" class="primary">distill</button>
+      <button id="clear-input-btn" class="ghost">clear</button>
+      <span id="distill-status" class="small"></span>
+    </div>
+
+    <div id="result-area" style="display:none; margin-top:16px;">
+      <div class="token-stat">
+        <span class="num" id="tok-before">–</span>
+        <span class="arrow">→</span>
+        <span class="num" id="tok-after">–</span>
+        <span class="pct" id="tok-pct"></span>
+      </div>
+      <label class="field-label" style="margin-top:14px;">Distilled</label>
+      <div id="distilled-block" class="output-block"></div>
+      <div id="changed-block" class="changed-block" style="display:none;"></div>
+
+      <div class="row" style="margin-top:12px;">
+        <button id="copy-btn">copy</button>
+        <span id="copy-hint" class="small" style="display:none;">copied</span>
+      </div>
+    </div>
+    <div id="distill-error" class="error-block" style="display:none;"></div>
+  </section>
+
+  <details class="about">
+    <summary>What this does, and doesn't, promise</summary>
+    <p>Distill cuts redundancy, filler, and unnecessary hedging, and makes the actual point or request explicit — while keeping full grammatical sentences. It doesn't use shorthand, symbols-for-words, or dropped grammar to save space, because pushing text away from normal language can make it <em>less</em> reliably understood even while cutting tokens, which defeats the point.</p>
+    <p>Numbers, names, dates, and negations ("not", "never", "no") are meant to be preserved exactly. If something else might have shifted meaning during the rewrite, it's flagged instead of silently smoothed over.</p>
+    <p>Token savings scale with how much redundancy was actually in the original — concise input won't shrink much, and that's expected, not a failure.</p>
+    <p>This is a one-off, stateless tool: nothing about your writing is learned or remembered between messages. Only your API key is stored, only in this browser, only on this device, and only until you clear it.</p>
+  </details>
+</div>
+
+<div class="overlay" id="clear-overlay">
+  <div class="box">
+    <h3>Clear saved API key</h3>
+    <p class="small">This deletes your saved API key from this browser. You'll need to paste it in again to use Distill.</p>
+    <div class="row" style="margin-top:14px;">
+      <button id="clear-cancel-btn" class="ghost">cancel</button>
+      <button id="clear-confirm-btn" class="ghost" style="color:var(--warn); border-color:var(--warn);">clear it</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ---------- storage: IndexedDB with localStorage fallback ----------
+  const DB_NAME = 'distill_db', STORE = 'kv';
+  const KEY_API = 'distill_api_key', KEY_MODEL = 'distill_model';
+
+  function openDB() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, 1);
+      req.onupgradeneeded = () => req.result.createObjectStore(STORE);
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+  async function idbGet(key) {
+    try {
+      const db = await openDB();
+      return await new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE, 'readonly').objectStore(STORE).get(key);
+        tx.onsuccess = () => resolve(tx.result);
+        tx.onerror = () => reject(tx.error);
+      });
+    } catch (e) { return undefined; }
+  }
+  async function idbSet(key, value) {
+    try {
+      const db = await openDB();
+      return await new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE, 'readwrite').objectStore(STORE).put(value, key);
+        tx.onsuccess = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
+    } catch (e) {
+      try { localStorage.setItem(key, JSON.stringify(value)); } catch (e2) {}
+    }
+  }
+  async function idbDelete(key) {
+    try {
+      const db = await openDB();
+      await new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE, 'readwrite').objectStore(STORE).delete(key);
+        tx.onsuccess = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
+    } catch (e) {}
+    try { localStorage.removeItem(key); } catch (e2) {}
+  }
+
+  let state = { apiKey: '', model: 'claude-sonnet-5' };
+
+  async function loadState() {
+    const [apiKey, model] = await Promise.all([idbGet(KEY_API), idbGet(KEY_MODEL)]);
+    if (apiKey !== undefined) state.apiKey = apiKey;
+    else { try { const v = localStorage.getItem(KEY_API); if (v) state.apiKey = JSON.parse(v); } catch (e) {} }
+    if (model !== undefined) state.model = model;
+  }
+
+  // ---------- Claude API ----------
+  const MESSAGES_URL = 'https://api.anthropic.com/v1/messages';
+  const COUNT_URL = 'https://api.anthropic.com/v1/messages/count_tokens';
+
+  function authHeaders() {
+    return {
+      'content-type': 'application/json',
+      'x-api-key': state.apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    };
+  }
+
+  async function countTokens(text) {
+    if (!state.apiKey) throw new Error('NO_KEY');
+    const res = await fetch(COUNT_URL, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ model: state.model, messages: [{ role: 'user', content: text }] })
+    });
+    if (!res.ok) {
+      let detail = '';
+      try { detail = (await res.json()).error?.message || ''; } catch (e) {}
+      const err = new Error(detail || ('HTTP ' + res.status));
+      err.status = res.status;
+      throw err;
+    }
+    const json = await res.json();
+    return json.input_tokens;
+  }
+
+  async function callClaude({ system, userContent, maxTokens }) {
+    if (!state.apiKey) throw new Error('NO_KEY');
+    const res = await fetch(MESSAGES_URL, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({
+        model: state.model,
+        max_tokens: maxTokens || 1024,
+        system: system,
+        messages: [{ role: 'user', content: userContent }]
+      })
+    });
+    if (!res.ok) {
+      let detail = '';
+      try { detail = (await res.json()).error?.message || ''; } catch (e) {}
+      const err = new Error(detail || ('HTTP ' + res.status));
+      err.status = res.status;
+      throw err;
+    }
+    const json = await res.json();
+    const block = (json.content || []).find((b) => b.type === 'text');
+    return { text: block ? block.text : '', stopReason: json.stop_reason || '' };
+  }
+
+  const DISTILL_SYSTEM = [
+    'You are part of Distill, a tool that rewrites text to be dense, structurally clear, and efficient for an LLM to read, without losing meaning.',
+    '',
+    'Given the input text:',
+    '1. Cut redundancy, filler, repeated information, and unnecessary hedging or qualification.',
+    '2. Make any request or key point explicit and stated plainly — do not leave it only implied.',
+    '3. Resolve ambiguous references ("it", "this", "that") where doing so does not require guessing.',
+    '4. Keep full grammatical sentences. Do not use shorthand, symbols-for-words, or dropped grammar — staying in natural language keeps the result reliably readable, not just short.',
+    '5. Preserve exactly: all numbers, names, dates, and negations ("not", "never", "no"). Copy these verbatim, never paraphrase them.',
+    '6. Do not add claims, information, or interpretation the original did not contain.',
+    '',
+    'Respond in exactly this format, nothing else:',
+    'DISTILLED:',
+    '<the reworked text>',
+    '',
+    'CHANGED:',
+    '<anything where meaning could plausibly have shifted despite your care, or the single word NONE if nothing is uncertain>'
+  ].join('\n');
+
+  function parseDistillResponse(text) {
+    const dMatch = text.match(/DISTILLED:\s*([\s\S]*?)(?:\n\s*CHANGED:|$)/i);
+    const cMatch = text.match(/CHANGED:\s*([\s\S]*)$/i);
+    const distilled = (dMatch ? dMatch[1] : text).trim();
+    let changed = cMatch ? cMatch[1].trim() : '';
+    if (/^none$/i.test(changed)) changed = '';
+    return { distilled, changed };
+  }
+
+  // ---------- UI wiring ----------
+  const $ = (id) => document.getElementById(id);
+
+  function refreshSettingsUI() {
+    $('api-key').value = state.apiKey || '';
+    $('model-select').value = state.model || 'claude-sonnet-5';
+  }
+
+  $('settings-toggle').addEventListener('click', () => {
+    const el = $('settings-panel');
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+  });
+  $('toggle-key-visibility').addEventListener('click', () => {
+    const el = $('api-key');
+    const showing = el.type === 'text';
+    el.type = showing ? 'password' : 'text';
+    $('toggle-key-visibility').textContent = showing ? 'show' : 'hide';
+  });
+  $('save-settings').addEventListener('click', async () => {
+    state.apiKey = $('api-key').value.trim();
+    state.model = $('model-select').value;
+    await idbSet(KEY_API, state.apiKey);
+    await idbSet(KEY_MODEL, state.model);
+    $('settings-saved-hint').style.display = 'inline';
+    setTimeout(() => { $('settings-saved-hint').style.display = 'none'; }, 1500);
+  });
+
+  $('clear-data-btn').addEventListener('click', () => { $('clear-overlay').style.display = 'flex'; });
+  $('clear-cancel-btn').addEventListener('click', () => { $('clear-overlay').style.display = 'none'; });
+  $('clear-overlay').addEventListener('click', (e) => { if (e.target.id === 'clear-overlay') $('clear-overlay').style.display = 'none'; });
+  $('clear-confirm-btn').addEventListener('click', async () => {
+    await Promise.all([idbDelete(KEY_API), idbDelete(KEY_MODEL)]);
+    location.reload();
+  });
+
+  function describeError(err) {
+    if (err && err.message === 'NO_KEY') return 'add your API key in settings first.';
+    if (err && err.status === 401) return 'that API key was rejected — check it in settings.';
+    if (err && err.status === 429) return 'rate limited — wait a moment and try again.';
+    if (err instanceof TypeError) return 'the request could not reach the API (network error, or the browser blocked it).';
+    return (err && err.message) || 'something went wrong.';
+  }
+
+  function emptyResponseMessage(stopReason) {
+    if (stopReason === 'max_tokens')
+      return 'the response was cut off before it produced any visible text — this happens with a very long or complex message. Try a shorter one, or try again.';
+    return 'the model didn\'t return any text back. Try again, or try a shorter message.';
+  }
+
+  let lastDistilled = '';
+  $('distill-btn').addEventListener('click', async () => {
+    const input = $('input-text').value.trim();
+    $('distill-error').style.display = 'none';
+    if (!input) return;
+    const btn = $('distill-btn');
+    btn.disabled = true;
+    $('distill-status').textContent = 'distilling…';
+    try {
+      const [beforeCount, { text: raw, stopReason }] = await Promise.all([
+        countTokens(input),
+        callClaude({ system: DISTILL_SYSTEM, userContent: input, maxTokens: 4096 })
+      ]);
+      if (!raw.trim()) throw new Error(emptyResponseMessage(stopReason));
+      const { distilled, changed } = parseDistillResponse(raw);
+      if (!distilled.trim()) throw new Error(emptyResponseMessage(stopReason));
+      const afterCount = await countTokens(distilled);
+
+      lastDistilled = distilled;
+      $('distilled-block').textContent = distilled;
+      if (changed) { $('changed-block').textContent = 'Possibly shifted: ' + changed; $('changed-block').style.display = 'block'; }
+      else { $('changed-block').style.display = 'none'; }
+
+      $('tok-before').textContent = beforeCount.toLocaleString();
+      $('tok-after').textContent = afterCount.toLocaleString();
+      const pctEl = $('tok-pct');
+      if (beforeCount > 0) {
+        const pct = Math.round((1 - afterCount / beforeCount) * 100);
+        pctEl.textContent = (pct >= 0 ? '−' : '+') + Math.abs(pct) + '%';
+        pctEl.className = 'pct' + (pct < 0 ? ' up' : '');
+      } else {
+        pctEl.textContent = '';
+      }
+      $('result-area').style.display = 'block';
+    } catch (err) {
+      $('distill-error').textContent = describeError(err);
+      $('distill-error').style.display = 'block';
+      $('result-area').style.display = 'none';
+    } finally {
+      btn.disabled = false;
+      $('distill-status').textContent = '';
+    }
+  });
+
+  $('clear-input-btn').addEventListener('click', () => {
+    $('input-text').value = '';
+    $('distill-error').style.display = 'none';
+    $('result-area').style.display = 'none';
+    $('distilled-block').textContent = '';
+    $('changed-block').style.display = 'none';
+    lastDistilled = '';
+    $('input-text').focus();
+  });
+
+  $('copy-btn').addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(lastDistilled);
+      $('copy-hint').style.display = 'inline';
+      setTimeout(() => { $('copy-hint').style.display = 'none'; }, 1500);
+    } catch (e) {
+      alert('Could not copy automatically — select the text and copy it manually.');
+    }
+  });
+
+  loadState().then(refreshSettingsUI);
+})();
+</script>
+</body>
+</html>
