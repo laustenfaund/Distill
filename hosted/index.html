@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Distill</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#3a6fb0" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Distill" />
+  <link rel="apple-touch-icon" href="data:image/png;base64,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" />
+<style>
+  :root {
+    --bg: #f6f5f2;
+    --panel: #ffffff;
+    --border: #ddd8ce;
+    --text: #1e1c19;
+    --text2: #6b6459;
+    --accent: #3a6fb0;
+    --accent-ink: #ffffff;
+    --good: #2f8a5b;
+    --warn: #b5482c;
+    --warn-bg: #fbe9e4;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16181a;
+      --panel: #1e2124;
+      --border: #35393e;
+      --text: #ece9e6;
+      --text2: #9a978f;
+      --accent: #6ea4e0;
+      --accent-ink: #0e1b28;
+      --good: #6fbf8f;
+      --warn: #ff8f6f;
+      --warn-bg: #3a2420;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: var(--sans); line-height: 1.5;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 24px 16px 80px; }
+  header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 4px; }
+  h1 { font-size: 22px; margin: 0; }
+  .tagline { color: var(--text2); font-size: 14px; margin: 0 0 20px; }
+  button {
+    font: inherit; cursor: pointer; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--panel); color: var(--text); padding: 8px 14px;
+  }
+  button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+  button.primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.ghost { background: transparent; }
+  button:not(.primary):hover { background: var(--bg); }
+  textarea, input[type=text], input[type=password], select {
+    font: inherit; width: 100%; padding: 10px; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--panel); color: var(--text);
+    resize: vertical;
+  }
+  label.field-label { display: block; font-size: 13px; color: var(--text2); margin: 0 0 6px; }
+  section.card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px; margin-bottom: 16px;
+  }
+  section.card > h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text2); margin: 0 0 14px; }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .small { font-size: 13px; color: var(--text2); }
+  details.about summary { cursor: pointer; font-size: 13px; color: var(--text2); }
+  details.about { margin: 20px 0; }
+  details.about p { font-size: 13px; color: var(--text2); }
+  .output-block {
+    border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 6px;
+    background: var(--bg); white-space: pre-wrap; font-family: var(--sans);
+  }
+  .changed-block {
+    border: 1px dashed var(--warn); background: var(--warn-bg); color: var(--warn);
+    border-radius: 8px; padding: 10px 12px; margin-top: 10px; font-size: 14px;
+  }
+  .error-block {
+    border: 1px solid var(--warn); background: var(--warn-bg); color: var(--warn);
+    border-radius: 8px; padding: 10px 12px; margin-top: 10px; font-size: 14px;
+  }
+  .token-stat {
+    display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+    font-family: var(--mono); font-size: 14px; margin-top: 12px;
+  }
+  .token-stat .num { font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .token-stat .arrow { color: var(--text2); }
+  .token-stat .pct { color: var(--good); font-weight: 600; }
+  .token-stat .pct.up { color: var(--warn); }
+  .overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: none;
+    align-items: center; justify-content: center; z-index: 999; padding: 16px;
+  }
+  .overlay .box { background: var(--panel); border-radius: 12px; padding: 20px; max-width: 420px; width: 100%; }
+  .overlay .box h3 { margin-top: 0; color: var(--warn); }
+  .checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+  .checkbox-row input { width: auto; }
+  .hint { font-size: 12px; color: var(--text2); margin-top: 4px; }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Distill</h1>
+    <button id="settings-toggle" class="ghost">settings</button>
+  </header>
+  <p class="tagline">Rework what you're about to send an LLM into something denser and structurally clearer — same meaning, fewer tokens, easier to parse correctly.</p>
+
+  <section class="card" id="settings-panel" style="display:none;">
+    <h2>Settings — access passcode</h2>
+    <label class="field-label" for="api-key">Access passcode (stored only in this browser, on this device)</label>
+    <div class="row">
+      <input type="password" id="api-key" placeholder="passcode" style="flex:1;" />
+      <button id="toggle-key-visibility" class="ghost">show</button>
+    </div>
+    <p class="hint">This build doesn't take your own Anthropic key. Distill sends your passcode and message to a small proxy the app owner runs, which holds the real key and enforces spending limits before forwarding the request to Claude. Unlike the plain version of Distill, your message does pass through that proxy on its way to Anthropic. Counting tokens (the before/after numbers) goes through the same proxy but isn't billed. If you weren't given a passcode, ask whoever runs this instance for one.</p>
+    <label class="field-label" style="margin-top:14px;">Model</label>
+    <select id="model-select">
+      <option value="claude-sonnet-5">Sonnet 5 — balanced (default)</option>
+      <option value="claude-haiku-4-5-20251001">Haiku 4.5 — cheapest, less nuance</option>
+      <option value="claude-opus-5">Opus 5 — most nuanced, priciest</option>
+    </select>
+    <p class="hint">Token counts are model-specific — switching models may change the before/after numbers even for the same text.</p>
+    <div class="row" style="margin-top:14px;">
+      <button id="save-settings" class="primary">save</button>
+      <span id="settings-saved-hint" class="small" style="display:none;">saved</span>
+    </div>
+    <div class="row" style="margin-top:14px; padding-top:14px; border-top:1px solid var(--border);">
+      <span class="small">Your passcode is the only thing stored — nothing else persists.</span>
+      <button id="clear-data-btn" class="ghost" style="color:var(--warn); border-color:var(--warn);">clear it</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Distill a message</h2>
+    <label class="field-label" for="input-text">What you're about to send</label>
+    <textarea id="input-text" rows="7" placeholder="Paste the message, prompt, or document you're about to send to an LLM…"></textarea>
+
+    <div class="row" style="margin-top:10px;">
+      <button id="distill-btn" class="primary">distill</button>
+      <button id="clear-input-btn" class="ghost">clear</button>
+      <span id="distill-status" class="small"></span>
+    </div>
+
+    <div id="result-area" style="display:none; margin-top:16px;">
+      <div class="token-stat">
+        <span class="num" id="tok-before">–</span>
+        <span class="arrow">→</span>
+        <span class="num" id="tok-after">–</span>
+        <span class="pct" id="tok-pct"></span>
+      </div>
+      <label class="field-label" style="margin-top:14px;">Distilled</label>
+      <div id="distilled-block" class="output-block"></div>
+      <div id="changed-block" class="changed-block" style="display:none;"></div>
+
+      <div class="row" style="margin-top:12px;">
+        <button id="copy-btn">copy</button>
+        <span id="copy-hint" class="small" style="display:none;">copied</span>
+      </div>
+    </div>
+    <div id="distill-error" class="error-block" style="display:none;"></div>
+  </section>
+
+  <details class="about">
+    <summary>What this does, and doesn't, promise</summary>
+    <p>Distill cuts redundancy, filler, and unnecessary hedging, and makes the actual point or request explicit — while keeping full grammatical sentences. It doesn't use shorthand, symbols-for-words, or dropped grammar to save space, because pushing text away from normal language can make it <em>less</em> reliably understood even while cutting tokens, which defeats the point.</p>
+    <p>Numbers, names, dates, and negations ("not", "never", "no") are meant to be preserved exactly. If something else might have shifted meaning during the rewrite, it's flagged instead of silently smoothed over.</p>
+    <p>Token savings scale with how much redundancy was actually in the original — concise input won't shrink much, and that's expected, not a failure.</p>
+    <p>This is a one-off, stateless tool: nothing about your writing is learned or remembered between messages. Only your passcode is stored, only in this browser, only on this device, and only until you clear it — though unlike the plain version of Distill, what you distill does pass through the app owner's proxy on its way to Anthropic.</p>
+  </details>
+</div>
+
+<div class="overlay" id="clear-overlay">
+  <div class="box">
+    <h3>Clear saved passcode</h3>
+    <p class="small">This deletes your saved passcode from this browser. You'll need to paste it in again to use Distill.</p>
+    <div class="row" style="margin-top:14px;">
+      <button id="clear-cancel-btn" class="ghost">cancel</button>
+      <button id="clear-confirm-btn" class="ghost" style="color:var(--warn); border-color:var(--warn);">clear it</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ---------- storage: IndexedDB with localStorage fallback ----------
+  const DB_NAME = 'distill_db', STORE = 'kv';
+  const KEY_API = 'distill_passcode', KEY_MODEL = 'distill_model';
+  // Base URL of the Cloudflare Worker proxy from worker/ in this repo —
+  // fill this in after you deploy it (see worker/README.md).
+  const ASSISTANT_PROXY_URL = 'https://REPLACE-WITH-YOUR-WORKER.workers.dev';
+
+  function openDB() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, 1);
+      req.onupgradeneeded = () => req.result.createObjectStore(STORE);
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+  async function idbGet(key) {
+    try {
+      const db = await openDB();
+      return await new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE, 'readonly').objectStore(STORE).get(key);
+        tx.onsuccess = () => resolve(tx.result);
+        tx.onerror = () => reject(tx.error);
+      });
+    } catch (e) { return undefined; }
+  }
+  async function idbSet(key, value) {
+    try {
+      const db = await openDB();
+      return await new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE, 'readwrite').objectStore(STORE).put(value, key);
+        tx.onsuccess = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
+    } catch (e) {
+      try { localStorage.setItem(key, JSON.stringify(value)); } catch (e2) {}
+    }
+  }
+  async function idbDelete(key) {
+    try {
+      const db = await openDB();
+      await new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE, 'readwrite').objectStore(STORE).delete(key);
+        tx.onsuccess = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
+    } catch (e) {}
+    try { localStorage.removeItem(key); } catch (e2) {}
+  }
+
+  let state = { apiKey: '', model: 'claude-sonnet-5' };
+
+  async function loadState() {
+    const [apiKey, model] = await Promise.all([idbGet(KEY_API), idbGet(KEY_MODEL)]);
+    if (apiKey !== undefined) state.apiKey = apiKey;
+    else { try { const v = localStorage.getItem(KEY_API); if (v) state.apiKey = JSON.parse(v); } catch (e) {} }
+    if (model !== undefined) state.model = model;
+  }
+
+  // ---------- Claude API, via the app owner's proxy (see worker/) ----------
+  // This does not go to api.anthropic.com directly. It goes to a Cloudflare
+  // Worker that holds the real Anthropic key server-side, checks the
+  // passcode below, and enforces spending caps before forwarding on.
+  const MESSAGES_URL = ASSISTANT_PROXY_URL + '/v1/messages';
+  const COUNT_URL = ASSISTANT_PROXY_URL + '/v1/messages/count_tokens';
+
+  function authHeaders() {
+    return {
+      'content-type': 'application/json',
+      'x-passcode': state.apiKey
+    };
+  }
+
+  async function countTokens(text) {
+    if (!state.apiKey) throw new Error('NO_KEY');
+    const res = await fetch(COUNT_URL, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ model: state.model, messages: [{ role: 'user', content: text }] })
+    });
+    if (!res.ok) {
+      let detail = '';
+      try { detail = (await res.json()).error?.message || ''; } catch (e) {}
+      const err = new Error(detail || ('HTTP ' + res.status));
+      err.status = res.status;
+      throw err;
+    }
+    const json = await res.json();
+    return json.input_tokens;
+  }
+
+  async function callClaude({ system, userContent, maxTokens }) {
+    if (!state.apiKey) throw new Error('NO_KEY');
+    const res = await fetch(MESSAGES_URL, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({
+        model: state.model,
+        max_tokens: maxTokens || 1024,
+        system: system,
+        messages: [{ role: 'user', content: userContent }]
+      })
+    });
+    if (!res.ok) {
+      let detail = '';
+      try { detail = (await res.json()).error?.message || ''; } catch (e) {}
+      const err = new Error(detail || ('HTTP ' + res.status));
+      err.status = res.status;
+      throw err;
+    }
+    const json = await res.json();
+    const block = (json.content || []).find((b) => b.type === 'text');
+    return { text: block ? block.text : '', stopReason: json.stop_reason || '' };
+  }
+
+  const DISTILL_SYSTEM = [
+    'You are part of Distill, a tool that rewrites text to be dense, structurally clear, and efficient for an LLM to read, without losing meaning.',
+    '',
+    'Given the input text:',
+    '1. Cut redundancy, filler, repeated information, and unnecessary hedging or qualification.',
+    '2. Make any request or key point explicit and stated plainly — do not leave it only implied.',
+    '3. Resolve ambiguous references ("it", "this", "that") where doing so does not require guessing.',
+    '4. Keep full grammatical sentences. Do not use shorthand, symbols-for-words, or dropped grammar — staying in natural language keeps the result reliably readable, not just short.',
+    '5. Preserve exactly: all numbers, names, dates, and negations ("not", "never", "no"). Copy these verbatim, never paraphrase them.',
+    '6. Do not add claims, information, or interpretation the original did not contain.',
+    '',
+    'Respond in exactly this format, nothing else:',
+    'DISTILLED:',
+    '<the reworked text>',
+    '',
+    'CHANGED:',
+    '<anything where meaning could plausibly have shifted despite your care, or the single word NONE if nothing is uncertain>'
+  ].join('\n');
+
+  function parseDistillResponse(text) {
+    const dMatch = text.match(/DISTILLED:\s*([\s\S]*?)(?:\n\s*CHANGED:|$)/i);
+    const cMatch = text.match(/CHANGED:\s*([\s\S]*)$/i);
+    const distilled = (dMatch ? dMatch[1] : text).trim();
+    let changed = cMatch ? cMatch[1].trim() : '';
+    if (/^none$/i.test(changed)) changed = '';
+    return { distilled, changed };
+  }
+
+  // ---------- UI wiring ----------
+  const $ = (id) => document.getElementById(id);
+
+  function refreshSettingsUI() {
+    $('api-key').value = state.apiKey || '';
+    $('model-select').value = state.model || 'claude-sonnet-5';
+  }
+
+  $('settings-toggle').addEventListener('click', () => {
+    const el = $('settings-panel');
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+  });
+  $('toggle-key-visibility').addEventListener('click', () => {
+    const el = $('api-key');
+    const showing = el.type === 'text';
+    el.type = showing ? 'password' : 'text';
+    $('toggle-key-visibility').textContent = showing ? 'show' : 'hide';
+  });
+  $('save-settings').addEventListener('click', async () => {
+    state.apiKey = $('api-key').value.trim();
+    state.model = $('model-select').value;
+    await idbSet(KEY_API, state.apiKey);
+    await idbSet(KEY_MODEL, state.model);
+    $('settings-saved-hint').style.display = 'inline';
+    setTimeout(() => { $('settings-saved-hint').style.display = 'none'; }, 1500);
+  });
+
+  $('clear-data-btn').addEventListener('click', () => { $('clear-overlay').style.display = 'flex'; });
+  $('clear-cancel-btn').addEventListener('click', () => { $('clear-overlay').style.display = 'none'; });
+  $('clear-overlay').addEventListener('click', (e) => { if (e.target.id === 'clear-overlay') $('clear-overlay').style.display = 'none'; });
+  $('clear-confirm-btn').addEventListener('click', async () => {
+    await Promise.all([idbDelete(KEY_API), idbDelete(KEY_MODEL)]);
+    location.reload();
+  });
+
+  function describeError(err) {
+    if (err && err.message === 'NO_KEY') return 'add your access passcode in settings first.';
+    if (err && err.status === 401) return 'that passcode was rejected — check it in settings.';
+    if (err && err.status === 429) return (err.message && err.message !== 'HTTP 429') ? err.message : 'rate limited — wait a moment and try again.';
+    if (err instanceof TypeError) return 'the request could not reach the proxy (network error, or the browser blocked it).';
+    return (err && err.message) || 'something went wrong.';
+  }
+
+  function emptyResponseMessage(stopReason) {
+    if (stopReason === 'max_tokens')
+      return 'the response was cut off before it produced any visible text — this happens with a very long or complex message. Try a shorter one, or try again.';
+    return 'the model didn\'t return any text back. Try again, or try a shorter message.';
+  }
+
+  let lastDistilled = '';
+  $('distill-btn').addEventListener('click', async () => {
+    const input = $('input-text').value.trim();
+    $('distill-error').style.display = 'none';
+    if (!input) return;
+    const btn = $('distill-btn');
+    btn.disabled = true;
+    $('distill-status').textContent = 'distilling…';
+    try {
+      const [beforeCount, { text: raw, stopReason }] = await Promise.all([
+        countTokens(input),
+        callClaude({ system: DISTILL_SYSTEM, userContent: input, maxTokens: 4096 })
+      ]);
+      if (!raw.trim()) throw new Error(emptyResponseMessage(stopReason));
+      const { distilled, changed } = parseDistillResponse(raw);
+      if (!distilled.trim()) throw new Error(emptyResponseMessage(stopReason));
+      const afterCount = await countTokens(distilled);
+
+      lastDistilled = distilled;
+      $('distilled-block').textContent = distilled;
+      if (changed) { $('changed-block').textContent = 'Possibly shifted: ' + changed; $('changed-block').style.display = 'block'; }
+      else { $('changed-block').style.display = 'none'; }
+
+      $('tok-before').textContent = beforeCount.toLocaleString();
+      $('tok-after').textContent = afterCount.toLocaleString();
+      const pctEl = $('tok-pct');
+      if (beforeCount > 0) {
+        const pct = Math.round((1 - afterCount / beforeCount) * 100);
+        pctEl.textContent = (pct >= 0 ? '−' : '+') + Math.abs(pct) + '%';
+        pctEl.className = 'pct' + (pct < 0 ? ' up' : '');
+      } else {
+        pctEl.textContent = '';
+      }
+      $('result-area').style.display = 'block';
+    } catch (err) {
+      $('distill-error').textContent = describeError(err);
+      $('distill-error').style.display = 'block';
+      $('result-area').style.display = 'none';
+    } finally {
+      btn.disabled = false;
+      $('distill-status').textContent = '';
+    }
+  });
+
+  $('clear-input-btn').addEventListener('click', () => {
+    $('input-text').value = '';
+    $('distill-error').style.display = 'none';
+    $('result-area').style.display = 'none';
+    $('distilled-block').textContent = '';
+    $('changed-block').style.display = 'none';
+    lastDistilled = '';
+    $('input-text').focus();
+  });
+
+  $('copy-btn').addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(lastDistilled);
+      $('copy-hint').style.display = 'inline';
+      setTimeout(() => { $('copy-hint').style.display = 'none'; }, 1500);
+    } catch (e) {
+      alert('Could not copy automatically — select the text and copy it manually.');
+    }
+  });
+
+  loadState().then(refreshSettingsUI);
+})();
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
+}
+</script>
+</body>
+</html>

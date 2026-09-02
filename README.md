@@ -26,6 +26,17 @@ Distill is a single portable HTML file — no build step, no install.
 1. Open [https://laustenfaund.github.io/Distill/](https://laustenfaund.github.io/Distill/) on your phone — not the repo's github.com page.
 2. Use your browser's "Add to Home Screen" / "Install app" option.
 
+## The hosted variant
+
+[`hosted/`](hosted) is a clone of this same app with one change: instead of
+each person pasting in their own Anthropic API key, distilling is gated by
+a passcode and routed through a small proxy (in [`worker/`](worker)) that
+holds a single shared key server-side, with hard per-person and total
+spending caps enforced before any request goes out. Use this if you want
+to give a few people access without also giving them your API key. See
+[`worker/README.md`](worker/README.md) to deploy the proxy; the UI is
+otherwise identical to the plain version above.
+
 ## Why this exists
 
 Compressing text for an LLM isn't the same problem as compressing it for a human — LLMs don't get tired of long input, so "readable" mostly comes down to two different things: fewer tokens (a real cost/context-budget lever) and less ambiguity (which improves reliability independent of length). Distill optimizes for both by cutting redundancy and stating things plainly, not by pushing text toward shorthand or dropped grammar — that would save tokens while making the result *less* reliably understood, which defeats the purpose. See [`DESIGN.md`](DESIGN.md) for the full reasoning.
