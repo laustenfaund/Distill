@@ -37,6 +37,14 @@ to give a few people access without also giving them your API key. See
 [`worker/README.md`](worker/README.md) to deploy the proxy; the UI is
 otherwise identical to the plain version above.
 
+## The creator variant
+
+[`creator/`](creator) is a third clone, for the app owner's own use —
+same passcode-gated, key-hidden shape as `hosted/`, but its own separate
+Worker ([`worker-creator/`](worker-creator)) with no spend cap and no
+output-token ceiling. Not meant to be handed out; see
+[`worker-creator/README.md`](worker-creator/README.md) to deploy it.
+
 ## Why this exists
 
 Compressing text for an LLM isn't the same problem as compressing it for a human — LLMs don't get tired of long input, so "readable" mostly comes down to two different things: fewer tokens (a real cost/context-budget lever) and less ambiguity (which improves reliability independent of length). Distill optimizes for both by cutting redundancy and stating things plainly, not by pushing text toward shorthand or dropped grammar — that would save tokens while making the result *less* reliably understood, which defeats the purpose. See [`DESIGN.md`](DESIGN.md) for the full reasoning.
