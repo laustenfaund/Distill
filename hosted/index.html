@@ -101,6 +101,12 @@
   .checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 14px; }
   .checkbox-row input { width: auto; }
   .hint { font-size: 12px; color: var(--text2); margin-top: 4px; }
+  .header-actions { display: flex; gap: 8px; }
+  .manual-overlay-box {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 12px; width: 960px; max-width: 96vw; height: 88vh;
+    display: flex; flex-direction: column; gap: 10px; padding: 12px;
+  }
+  .manual-overlay-head { display: flex; align-items: center; justify-content: space-between; font-size: 13px; color: var(--text2); }
   a { color: var(--accent); }
 </style>
 </head>
@@ -108,7 +114,10 @@
 <div class="wrap">
   <header>
     <h1>Distill</h1>
-    <button id="settings-toggle" class="ghost">settings</button>
+    <div class="header-actions">
+      <button id="manual-btn" class="ghost">manual</button>
+      <button id="settings-toggle" class="ghost">settings</button>
+    </div>
   </header>
   <p class="tagline">Rework what you're about to send an LLM into something denser and structurally clearer — same meaning, fewer tokens, easier to parse correctly.</p>
 
@@ -174,6 +183,16 @@
     <p>Token savings scale with how much redundancy was actually in the original — concise input won't shrink much, and that's expected, not a failure.</p>
     <p>This is a one-off, stateless tool: nothing about your writing is learned or remembered between messages. Only your passcode is stored, only in this browser, only on this device, and only until you clear it — though unlike the plain version of Distill, what you distill does pass through the app owner's proxy on its way to Anthropic.</p>
   </details>
+</div>
+
+<div class="overlay" id="manual-overlay">
+  <div class="manual-overlay-box">
+    <div class="manual-overlay-head">
+      <span>Distill manual</span>
+      <button id="manual-close-btn" class="ghost">close</button>
+    </div>
+    <iframe id="manual-frame" title="Distill manual" style="flex:1; width:100%; border:1px solid var(--border); border-radius:8px; background:var(--bg);"></iframe>
+  </div>
 </div>
 
 <div class="overlay" id="clear-overlay">
@@ -333,8 +352,171 @@
     return { distilled, changed };
   }
 
+  // ---------- manual ----------
+  const MANUAL_HTML = `<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --bg: #f6f5f2; --panel: #ffffff; --border: #ddd8ce; --text: #1e1c19; --text2: #6b6459;
+    --accent: #3a6fb0; --good: #2f8a5b; --warn: #b5482c; --warn-bg: #fbe9e4;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#16181a; --panel:#1e2124; --border:#35393e; --text:#ece9e6; --text2:#9a978f; --accent:#6ea4e0; --good:#6fbf8f; --warn:#ff8f6f; --warn-bg:#3a2420; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); font-size:15px; line-height:1.6; }
+  .shell { max-width: 900px; margin: 0 auto; padding: 36px 20px 80px; }
+  .masthead { border-bottom: 1px solid var(--border); padding-bottom: 22px; margin-bottom: 26px; }
+  .eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin: 0 0 8px; }
+  .masthead h1 { font-size: 28px; margin: 0 0 10px; }
+  .lede { color: var(--text2); max-width: 60ch; margin: 0 0 16px; }
+  .factrow { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 13px; color: var(--text2); }
+  .factrow b { color: var(--text); font-weight: 600; }
+  .layout { display: grid; grid-template-columns: 190px 1fr; gap: 34px; align-items: start; }
+  @media (max-width: 700px) { .layout { grid-template-columns: 1fr; } .toc { position: static !important; max-height: none !important; } }
+  .toc { position: sticky; top: 24px; max-height: calc(100vh - 48px); overflow-y: auto; overscroll-behavior: contain; }
+  .toc-label { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text2); margin: 0 0 10px; }
+  .toc ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+  .toc a { color: var(--text2); text-decoration: none; font-size: 13px; }
+  .toc a:hover { color: var(--accent); }
+  section { margin-bottom: 34px; scroll-margin-top: 20px; }
+  .sec-num { font-family: var(--mono); font-size: 12px; color: var(--accent); margin: 0 0 4px; }
+  section h2 { font-size: 18px; margin: 0 0 10px; }
+  section p { margin: 0 0 10px; max-width: 62ch; }
+  section code { font-family: var(--mono); font-size: 0.92em; background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; }
+  ul, ol.steps { padding-left: 20px; max-width: 60ch; margin: 0 0 10px; }
+  li { margin-bottom: 6px; }
+  .note { border: 1px dashed var(--accent); background: var(--panel); border-radius: 8px; padding: 10px 12px; font-size: 14px; max-width: 58ch; }
+  .good { color: var(--good); font-weight: 600; } .bad { color: var(--warn); font-weight: 600; }
+  footer { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); color: var(--text2); font-size: 13px; }
+</style></head>
+<body>
+<div class="shell">
+  <header class="masthead">
+    <p class="eyebrow">User manual</p>
+    <h1>Distill</h1>
+    <p class="lede">Reworks whatever you're about to send an AI model into something shorter and clearer, with the same meaning. This version uses an access passcode from the app owner instead of your own Anthropic key.</p>
+    <div class="factrow">
+      <span><b>Runs</b>&nbsp;in your browser</span>
+      <span><b>Needs</b>&nbsp;an access passcode</span>
+      <span><b>Your message goes</b>&nbsp;through the app owner's proxy to Anthropic</span>
+      <span><b>Saves</b>&nbsp;only your passcode and model choice</span>
+    </div>
+  </header>
+  <div class="layout">
+    <nav class="toc">
+      <p class="toc-label">Contents</p>
+      <ol>
+        <li><a href="#distill">Distilling a message</a></li>
+        <li><a href="#numbers">The before and after numbers</a></li>
+        <li><a href="#shifted">"Possibly shifted"</a></li>
+        <li><a href="#rules">What it changes and what it keeps</a></li>
+        <li><a href="#settings">Settings</a></li>
+        <li><a href="#privacy">Data and privacy</a></li>
+        <li><a href="#install">On your phone</a></li>
+        <li><a href="#troubleshooting">Troubleshooting</a></li>
+      </ol>
+    </nav>
+    <main>
+      <section id="distill">
+        <p class="sec-num">01</p>
+        <h2>Distilling a message</h2>
+        <ol class="steps">
+          <li>Paste or type what you're about to send into the box. It can be a question, a prompt or a whole document.</li>
+          <li>Tap <code>distill</code>. It usually takes a few seconds.</li>
+          <li>Read the result. Tap <code>copy</code> to put it on your clipboard, then paste it wherever you're sending it.</li>
+        </ol>
+        <p><code>clear</code> empties the box and the result so you can start again.</p>
+      </section>
+      <section id="numbers">
+        <p class="sec-num">02</p>
+        <h2>The before and after numbers</h2>
+        <p>Above the result you'll see something like <code>412 → 268 −35%</code>. That's the size of your text in tokens, the units AI models count and charge by, before and after.</p>
+        <ul>
+          <li><span class="good">Green, with a minus</span>: the result is shorter.</li>
+          <li><span class="bad">Red, with a plus</span>: the result is longer. This can happen when your text was already tight and Distill spelled out a request that was only implied.</li>
+        </ul>
+        <p>How much it shrinks depends on how much repetition and filler was there to begin with. Short, direct text won't shrink much, and that's expected.</p>
+      </section>
+      <section id="shifted">
+        <p class="sec-num">03</p>
+        <h2>"Possibly shifted"</h2>
+        <p>If anything in the rewrite might not mean exactly what you meant, a box marked <b>Possibly shifted</b> appears under the result and says what. Check those parts before you send. If nothing is flagged, the box doesn't appear.</p>
+      </section>
+      <section id="rules">
+        <p class="sec-num">04</p>
+        <h2>What it changes and what it keeps</h2>
+        <p><b>It cuts:</b> repetition, filler, and unneeded hedging and qualifiers.</p>
+        <p><b>It adds clarity:</b> it states your actual request or main point plainly, and replaces "it", "this" or "that" with what they refer to when that's clear.</p>
+        <p><b>It keeps exactly:</b> numbers, names, dates, and negations like "not", "never" and "no".</p>
+        <p><b>It won't:</b> use shorthand, symbols in place of words, or broken grammar to save space, because those make text harder to understand reliably. It also won't add anything your original didn't say.</p>
+        <p>Each message is handled on its own. Distill doesn't remember earlier messages or learn your style.</p>
+      </section>
+      <section id="settings">
+        <p class="sec-num">05</p>
+        <h2>Settings and your passcode</h2>
+        <p>Tap <code>settings</code> at the top. Paste the passcode the app owner gave you, pick a model, and tap <code>save</code>. You only need to do this once on each device.</p>
+        <ul>
+          <li><b>Sonnet 5</b> is the default and a good balance.</li>
+          <li><b>Haiku 4.5</b> is the cheapest but keeps less nuance.</li>
+          <li><b>Opus 5</b> keeps the most nuance and costs the most.</li>
+        </ul>
+        <p>Token counts depend on the model, so switching models can change the before and after numbers for the same text.</p>
+        <p>The app owner pays for what you use, so the proxy has limits: a number of requests per minute, a daily spending limit for each passcode, and a monthly limit for everyone together. If you hit one, Distill tells you which one and when it resets.</p>
+      </section>
+      <section id="privacy">
+        <p class="sec-num">06</p>
+        <h2>Data and privacy</h2>
+        <p>Distill saves only two things, in this browser on this device: your passcode and your model choice. It doesn't keep your messages or learn anything from them.</p>
+        <p>When you tap <code>distill</code>, your message and passcode go to a small proxy the app owner runs. The proxy checks the passcode and its spending limits, then sends your message on to Anthropic. Your message passes through the proxy on the way, which is the difference from the plain version of Distill, where it goes straight to Anthropic.</p>
+        <div class="note">To remove your passcode from this device, open <code>settings</code> and tap <code>clear it</code>.</div>
+      </section>
+      <section id="install">
+        <p class="sec-num">07</p>
+        <h2>On your phone</h2>
+        <p>You can add Distill to your home screen. On iPhone, in Safari, tap <b>Share</b>, then <b>Add to Home Screen</b>. On Android, in Chrome, tap <b>Install app</b> or use the menu's <b>Add to Home screen</b>.</p>
+        <p>The page opens without internet, but distilling needs a connection.</p>
+      </section>
+      <section id="troubleshooting">
+        <p class="sec-num">08</p>
+        <h2>Troubleshooting</h2>
+        <p><b>Nothing happens when I tap distill</b>: the box is probably empty.</p>
+        <p><b>"add your access passcode in settings first"</b>: open <code>settings</code>, paste your passcode and tap <code>save</code>.</p>
+        <p><b>"that passcode was rejected"</b>: check it for typos. If it's right, it may have been turned off. Ask the app owner.</p>
+        <p><b>A message about a daily or monthly limit</b>: the limit for your passcode or for everyone has been reached. It says when it resets.</p>
+        <p><b>"rate limited"</b> or <b>"too many requests"</b>: wait a minute and try again.</p>
+        <p><b>"could not reach the proxy"</b>: check your internet connection. Some browser privacy settings or ad blockers can also block it.</p>
+        <p><b>"the response was cut off"</b> or <b>"didn't return any text"</b>: this can happen with very long text. Try a shorter piece, or try again.</p>
+      </section>
+    </main>
+  </div>
+  <footer>Distill is a single self-contained page. This manual describes how it works as built.</footer>
+</div>
+<script>
+  // Handle contents links here instead of jumping by #hash: inside this
+  // embedded frame, a native jump can scroll the page behind it on phones.
+  document.querySelectorAll('.toc a[href^="#"]').forEach((a) => {
+    a.addEventListener('click', (e) => {
+      e.preventDefault();
+      const target = document.getElementById(a.getAttribute('href').slice(1));
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+<\/script>
+</body></html>`;
+
   // ---------- UI wiring ----------
   const $ = (id) => document.getElementById(id);
+
+  let manualLoaded = false;
+  $('manual-btn').addEventListener('click', () => {
+    if (!manualLoaded) { $('manual-frame').srcdoc = MANUAL_HTML; manualLoaded = true; }
+    $('manual-overlay').style.display = 'flex';
+  });
+  $('manual-close-btn').addEventListener('click', () => { $('manual-overlay').style.display = 'none'; });
+  $('manual-overlay').addEventListener('click', (e) => { if (e.target.id === 'manual-overlay') $('manual-overlay').style.display = 'none'; });
 
   function refreshSettingsUI() {
     $('api-key').value = state.apiKey || '';
